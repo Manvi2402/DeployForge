@@ -1,11 +1,15 @@
 from fastapi import FastAPI
 from app.tasks import deploy_repo
-
+from pydantic import BaseModel
 app = FastAPI()
-
-@app.post("/deploy")
-def deploy(repo_url: str):
-    task = deploy_repo.delay(repo_url)
+class DeployRequest(BaseModel):
+    repo_url: str
+    deployment_id: str
+@app.post("/orchestrate/deploy")
+def deploy(request: DeployRequest):
+    task = deploy_repo.delay(
+        request.repo_url, 
+        request.deployment_id)
 
     return {
         "task_id": task.id,
